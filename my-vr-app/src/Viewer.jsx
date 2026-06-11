@@ -1,9 +1,13 @@
-import { Canvas } from '@react-three/fiber'
+import {
+    Canvas,
+    useThree
+  } from '@react-three/fiber'
 import { OrbitControls, Html } from '@react-three/drei'
 import { useState, useEffect, useRef } from 'react'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import * as THREE from 'three'
 
 function StickyPin({
     position,
@@ -17,7 +21,7 @@ function StickyPin({
   
     return (
       <mesh position={position}>
-        <Html distanceFactor={8}>
+        <Html distanceFactor={3}>
           <div
             style={{
               position:
@@ -30,8 +34,8 @@ function StickyPin({
                 setOpen(!open)
               }
               style={{
-                width: 38,
-                height: 38,
+                width: 26,
+                height: 26,
                 background:
                   '#FFD700',
                 borderRadius: 6,
@@ -72,9 +76,9 @@ function StickyPin({
                 style={{
                   position:
                     'absolute',
-                  top: 46,
+                  top: 32,
                   left: 0,
-                  width: 260,
+                  width: 180,
                   background:
                     '#FFF9C4',
                   border:
@@ -94,12 +98,12 @@ function StickyPin({
   
                 <div
                   style={{
-                    padding: 14,
+                    padding: 10,
                   }}
                 >
                   <div
                     style={{
-                      fontSize: 11,
+                      fontSize: 9,
                       color:
                         '#777',
                       marginBottom:
@@ -216,16 +220,41 @@ function StickyPin({
           const loadedScene =
             result.scene || result
   
+            const box =
+            new THREE.Box3().setFromObject(
+              loadedScene
+            )
+          
+          const size =
+            box.getSize(
+              new THREE.Vector3()
+            )
+          
+          const center =
+            box.getCenter(
+              new THREE.Vector3()
+            )
+          
+          const maxSize =
+            Math.max(
+              size.x,
+              size.y,
+              size.z
+            )
+          
+          const scale =
+            3 / maxSize
+          
           loadedScene.scale.set(
-            0.01,
-            0.01,
-            0.01
+            scale,
+            scale,
+            scale
           )
-  
+          
           loadedScene.position.set(
-            0,
-            -1,
-            0
+            -center.x * scale,
+            -center.y * scale,
+            -center.z * scale
           )
   
           loadedScene.traverse(
@@ -311,9 +340,141 @@ function StickyPin({
     )
   }
 
+  function SnapshotButton() {
+    const { gl } =
+      useThree()
+  
+      function SnapshotHelper({
+        setCapture
+      }) {
+        const { gl } =
+          useThree()
+      
+        useEffect(() => {
+          setCapture(() => {
+            return () => {
+              const ua =
+                navigator.userAgent.toLowerCase()
+      
+              const isMac =
+                ua.includes(
+                  'mac'
+                )
+      
+              const isVR =
+                !!navigator.xr
+      
+              const format =
+                isMac &&
+                !isVR
+                  ? 'image/png'
+                  : 'image/jpeg'
+      
+              const ext =
+                format.includes(
+                  'png'
+                )
+                  ? 'png'
+                  : 'jpg'
+      
+              const image =
+                gl.domElement.toDataURL(
+                  format,
+                  0.92
+                )
+      
+              const link =
+                document.createElement(
+                  'a'
+                )
+      
+              link.href =
+                image
+      
+              link.download =
+                `spaceview-${Date.now()}.${ext}`
+      
+              link.click()
+            }
+          })
+        }, [gl])
+      
+        return null
+      }
+  
+    return (
+      <Html
+        position={[
+          -999,
+          -999,
+          -999,
+        ]}
+      >
+        <button
+          id="snapshot-btn"
+          onClick={
+            takeShot
+          }
+        />
+      </Html>
+    )
+  }
   
 
+  function SnapshotHelper({
+    setCapture,
+  }) {
+    const { gl } =
+      useThree()
   
+    useEffect(() => {
+      setCapture(() => {
+        return () => {
+          const ua =
+            navigator.userAgent.toLowerCase()
+  
+          const isMac =
+            ua.includes('mac')
+  
+          const isVR =
+            !!navigator.xr
+  
+          const format =
+            isMac && !isVR
+              ? 'image/png'
+              : 'image/jpeg'
+  
+          const ext =
+            format.includes(
+              'png'
+            )
+              ? 'png'
+              : 'jpg'
+  
+          const image =
+            gl.domElement.toDataURL(
+              format,
+              0.92
+            )
+  
+          const link =
+            document.createElement(
+              'a'
+            )
+  
+          link.href =
+            image
+  
+          link.download =
+            `spaceview-${Date.now()}.${ext}`
+  
+          link.click()
+        }
+      })
+    }, [gl])
+  
+    return null
+  }
 
 
 export default function Viewer({
@@ -334,6 +495,9 @@ export default function Viewer({
 
   const [noteText, setNoteText] =
     useState('')
+
+    const [capture, setCapture] =
+  useState(null)
 
   function savePin() {
     if (
@@ -392,6 +556,13 @@ export default function Viewer({
         >
           📌 Note
         </button>
+        <button
+  onClick={() =>
+    capture?.()
+  }
+>
+  📸 Snapshot
+</button>
       </div>
 
       {pendingPin && (
@@ -542,8 +713,9 @@ export default function Viewer({
 
       <Canvas
         camera={{
-          position: [0, 2, 8],
-        }}
+            position: [0, 1.5, 5],
+            fov: 55,
+          }}
         style={{
           background:
             'black',
@@ -554,6 +726,11 @@ export default function Viewer({
         <directionalLight
           position={[5, 5, 5]}
         />
+<SnapshotHelper
+  setCapture={
+    setCapture
+  }
+/>
 
 <Room
   file={file}
@@ -581,10 +758,11 @@ export default function Viewer({
         )}
 
 <OrbitControls
-  rotateSpeed={0.4}
-  zoomSpeed={0.6}
-  panSpeed={0.5}
-  dampingFactor={0.12}
+  target={[0, 0, 0]}
+  rotateSpeed={0.3}
+  zoomSpeed={0.8}
+  panSpeed={0.4}
+  dampingFactor={0.15}
   enableDamping
 />
       </Canvas>
