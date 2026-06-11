@@ -1,204 +1,323 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
-export default function Landing({ onFileLoaded }) {
-  const inputRef = useRef()
+export default function Landing({ onFileLoaded, onLogout }) {
+const inputRef = useRef()
 
-  const handleFile = (file) => {
-    if (!file) return
-    if (!file.name.endsWith('.glb') && !file.name.endsWith('.gltf')) {
-      alert('Please upload a .glb or .gltf file')
-      return
-    }
-    const url = URL.createObjectURL(file)
-    onFileLoaded(url)
+const [dragging, setDragging] = useState(false)
+const [selectedFile, setSelectedFile] =
+useState('')
+
+const handleFile = (file) => {
+if (!file) return
+const valid =
+  file.name.toLowerCase().endsWith('.glb') ||
+  file.name.toLowerCase().endsWith('.gltf') ||
+  file.name.toLowerCase().endsWith('.obj') ||
+  file.name.toLowerCase().endsWith('.fbx')
+const validExtensions = ['.glb', '.gltf', '.obj', '.fbx']
+  const hasValidExt = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext))
+  if (!hasValidExt) {
+    alert('Please upload a .glb, .gltf, .obj, or .fbx file')
+    return
   }
 
-  const handleDrop = (e) => {
-    e.preventDefault()
-    const file = e.dataTransfer.files[0]
-    handleFile(file)
-  }
+setSelectedFile(file.name)
 
-  const handleDragOver = (e) => {
-    e.preventDefault()
-  }
+const url = URL.createObjectURL(file)
 
-  const handleInputChange = (e) => {
-    const file = e.target.files[0]
-    handleFile(file)
-  }
+setTimeout(() => {
+  onFileLoaded(url)
+}, 700)
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#0a0a0a',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
 
-      {/* Navbar */}
-      <nav style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '20px 40px',
-        borderBottom: '1px solid #1a1a1a',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            background: '#FFD700',
-            borderRadius: '6px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold',
-            fontSize: '16px',
-            color: '#0a0a0a'
-          }}>S</div>
-          <span style={{
-            color: 'white',
-            fontWeight: '600',
-            fontSize: '18px',
-            letterSpacing: '-0.02em'
-          }}>SpaceView</span>
-        </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <span style={{ color: '#666', fontSize: '14px' }}>For interior designers & architects</span>
-        </div>
-      </nav>
+}
 
-      {/* Hero */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '60px 20px',
-        textAlign: 'center',
-      }}>
+const handleDrop = (e) => {
+e.preventDefault()
 
-        {/* Badge */}
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-          background: '#1a1a1a',
-          border: '1px solid #2a2a2a',
-          borderRadius: '20px',
-          padding: '6px 14px',
-          marginBottom: '32px',
-        }}>
-          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80' }} />
-          <span style={{ color: '#888', fontSize: '13px' }}>Now in early access</span>
-        </div>
 
-        {/* Headline */}
-        <h1 style={{
+setDragging(false)
+
+const file = e.dataTransfer.files[0]
+
+handleFile(file)
+
+
+}
+
+return (
+<div
+style={{
+minHeight: '100vh',
+background:
+'linear-gradient(180deg,#070707,#111)',
+display: 'flex',
+flexDirection: 'column'
+}}
+>
+<nav
+style={{
+display: 'flex',
+justifyContent:
+'space-between',
+alignItems: 'center',
+padding: '24px 48px',
+borderBottom:
+'1px solid rgba(255,255,255,.06)'
+}}
+>
+<div
+style={{
+display: 'flex',
+gap: 12,
+alignItems: 'center'
+}}
+>
+<div
+style={{
+width: 34,
+height: 34,
+background: '#FFD700',
+borderRadius: 8,
+display: 'grid',
+placeItems: 'center',
+color: '#000',
+fontWeight: 800
+}}
+>
+S </div>
+
+```
+      <div
+        style={{
           color: 'white',
-          fontSize: '56px',
-          fontWeight: '700',
-          lineHeight: '1.1',
-          margin: '0 0 20px',
-          letterSpacing: '-0.03em',
-          maxWidth: '700px',
-        }}>
-          Walk through your design
-          <span style={{ color: '#FFD700' }}> before it's built</span>
-        </h1>
+          fontWeight: 700,
+          fontSize: 20
+        }}
+      >
+        SpaceView
+      </div>
+    </div>
 
-        {/* Subheadline */}
-        <p style={{
-          color: '#888',
-          fontSize: '18px',
-          lineHeight: '1.6',
-          maxWidth: '500px',
-          margin: '0 0 48px',
-        }}>
-          Upload your 3D model and let clients explore, review, and approve their space in an immersive walkthrough — no app install needed.
-        </p>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+  <span style={{ color: '#666', fontSize: 14 }}>Interior • Architecture • VR</span>
+  <button
+    onClick={onLogout}
+    style={{
+      background: 'none',
+      border: '1px solid #2a2a2a',
+      borderRadius: '8px',
+      padding: '7px 14px',
+      color: '#666',
+      fontSize: '13px',
+      cursor: 'pointer',
+    }}
+  >
+    Log out
+  </button>
+</div>
+  </nav>
 
-        {/* Upload zone */}
-        <div
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onClick={() => inputRef.current.click()}
-          style={{
-            width: '100%',
-            maxWidth: '520px',
-            border: '2px dashed #2a2a2a',
-            borderRadius: '16px',
-            padding: '48px 32px',
-            cursor: 'pointer',
-            transition: 'border-color 0.2s',
-            background: '#111',
-          }}
-          onMouseEnter={e => e.currentTarget.style.borderColor = '#FFD700'}
-          onMouseLeave={e => e.currentTarget.style.borderColor = '#2a2a2a'}
-        >
-          <div style={{ fontSize: '40px', marginBottom: '16px' }}>📁</div>
-          <p style={{
-            color: 'white',
-            fontSize: '18px',
-            fontWeight: '600',
-            margin: '0 0 8px',
-          }}>
-            Drop your 3D file here
-          </p>
-          <p style={{ color: '#555', fontSize: '14px', margin: '0 0 24px' }}>
-            Supports .glb and .gltf files
-          </p>
-          <button style={{
-            background: '#FFD700',
-            color: '#0a0a0a',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '12px 28px',
-            fontSize: '15px',
-            fontWeight: '600',
-            cursor: 'pointer',
-          }}>
-            Browse files
-          </button>
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".glb,.gltf"
-            style={{ display: 'none' }}
-            onChange={handleInputChange}
-          />
-        </div>
+  <div
+    style={{
+      flex: 1,
+      display: 'flex',
+      justifyContent:
+        'center',
+      alignItems: 'center',
+      flexDirection: 'column',
+      padding: 20
+    }}
+  >
+    <div
+      style={{
+        color: '#4ade80',
+        marginBottom: 24,
+        fontSize: 13
+      }}
+    >
+      ● Early Access
+    </div>
 
-        {/* Feature pills */}
-        <div style={{
-          display: 'flex',
-          gap: '12px',
-          marginTop: '40px',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-        }}>
-          {[
-            '🎨 Change wall colours',
-            '📌 Leave sticky notes',
-            '🥽 VR headset ready',
-            '🔗 Share with clients',
-          ].map((feature) => (
-            <div key={feature} style={{
-              background: '#111',
-              border: '1px solid #1a1a1a',
-              borderRadius: '20px',
-              padding: '8px 16px',
-              color: '#888',
-              fontSize: '13px',
-            }}>
-              {feature}
-            </div>
-          ))}
-        </div>
+    <h1
+      style={{
+        color: 'white',
+        fontSize: 64,
+        lineHeight: 1.05,
+        textAlign: 'center',
+        margin: 0,
+        maxWidth: 900
+      }}
+    >
+      Walk through your design
+      <br />
+
+      <span
+        style={{
+          color: '#FFD700'
+        }}
+      >
+        before it's built
+      </span>
+    </h1>
+
+    <p
+      style={{
+        color: '#777',
+        fontSize: 18,
+        marginTop: 28,
+        textAlign: 'center',
+        maxWidth: 700
+      }}
+    >
+      Upload a model and let
+      clients explore, review,
+      approve, and experience
+      spaces before construction.
+    </p>
+
+    <div
+      onClick={() =>
+        inputRef.current.click()
+      }
+      onDragOver={(e) => {
+        e.preventDefault()
+        setDragging(true)
+      }}
+      onDragLeave={() =>
+        setDragging(false)
+      }
+      onDrop={handleDrop}
+      style={{
+        marginTop: 50,
+        width: 580,
+        maxWidth: '90%',
+        border:
+          dragging
+            ? '2px solid #FFD700'
+            : '2px dashed rgba(255,255,255,.12)',
+        background:
+          dragging
+            ? '#17120a'
+            : '#111',
+        borderRadius: 24,
+        padding: 50,
+        textAlign: 'center',
+        cursor: 'pointer',
+        transition:
+          'all .2s ease'
+      }}
+    >
+      <div
+        style={{
+          fontSize: 44
+        }}
+      >
+        {dragging
+          ? '🚀'
+          : '📁'}
       </div>
 
+      <div
+        style={{
+          color: 'white',
+          fontSize: 22,
+          marginTop: 16,
+          fontWeight: 600
+        }}
+      >
+        Upload your 3D model
+      </div>
+
+      <div
+        style={{
+          color: '#666',
+          marginTop: 10
+        }}
+      >
+        Drag & Drop .glb / .gltf / .obj / .fbx
+      </div>
+
+      <button
+        style={{
+          marginTop: 28,
+          background:
+            '#FFD700',
+          color: '#000',
+          border: 0,
+          padding:
+            '14px 28px',
+          borderRadius: 12,
+          fontWeight: 700,
+          cursor: 'pointer'
+        }}
+      >
+        Browse files
+      </button>
+
+      {selectedFile && (
+        <div
+          style={{
+            marginTop: 18,
+            color:
+              '#4ade80',
+            fontSize: 14
+          }}
+        >
+          Loading:
+          {' '}
+          {selectedFile}
+        </div>
+      )}
+
+      <input
+        hidden
+        ref={inputRef}
+        type="file"
+        accept=".glb,.gltf,.obj,.fbx"
+        onChange={(e) =>
+          handleFile(
+            e.target.files[0]
+          )
+        }
+      />
     </div>
-  )
+
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 10,
+        marginTop: 40,
+        justifyContent:
+          'center'
+      }}
+    >
+      {[
+        '🎨 Material Editing',
+        '📌 Review Notes',
+        '🥽 VR Ready',
+        '🔗 Share Links'
+      ].map((item) => (
+        <div
+          key={item}
+          style={{
+            color:
+              '#888',
+            background:
+              '#111',
+            padding:
+              '10px 18px',
+            borderRadius: 30,
+            border:
+              '1px solid rgba(255,255,255,.06)'
+          }}
+        >
+          {item}
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+)
 }
